@@ -1,0 +1,76 @@
+DESCRIPTION
+-----------
+This archive contains a simple and readable ANSI C implementation of
+frequency substitution coding and decoding.  Frequency substitution is a
+form of encoding that assigns the smallest values to the most frequent
+symbols.
+
+This implementation is not intended to be the best, fastest, smallest, or any
+other performance related adjective.
+
+More information on frequency substitution encoding may be found at:
+http://michael.dipperstein.com/freqsub
+
+FILES
+-----
+COPYING         - Rules for copying and distributing GPL software
+COPYING.LESSER  - Rules for copying and distributing LGPL software
+freqsub.c       - Source for frequency substitution library encoding and
+                  decoding routines.
+freqsub.h       - Header containing prototypes for frequency substitution
+                  library functions.
+Makefile        - makefile for this project (assumes gcc compiler and GNU make)
+optlist.c       - Source code for GetOptlist function and supporting functions
+optlist.h       - Header file to be included by code using the optlist library
+README          - this file
+sample.c        - Demonstration of how to use the rice library functions
+
+BUILDING
+--------
+To build these files with GNU make and gcc, simply enter "make" from the
+command line.  The executable will be named sample (or sample.exe).
+
+USAGE
+-----
+Usage: sample <options>
+
+options:
+  -d : Decode input file to output file.
+  -e : Encode input file to output file.
+  -s : Use sparse data file header.
+  -i <filename> : Name of input file.
+  -o <filename> : Name of output file.
+  -h|?  : Print out command line options.
+
+-d      Decode the specified input file (see -i) using the frequency
+        substitution decoding algorithm.  Results are written to the specified
+        output file (see -o).  Only files encode by this program may be
+        decoded.
+
+-e      Encode the specified input file (see -i) using the frequency
+        substitution encoding algorithm.  Results are written to the specified
+        output file (see -o).
+
+-s      Use sparse data file header.  The code stored at the top of the encoded
+        file is/will be optimized for unencode data streams that use less than
+        half of the available symbols (eg. English text).
+
+-i <filename>   The name of the input file.  There is no valid usage of this
+                program without a specified input file.
+
+-o <filename>   The name of the output file.  If no file is specified, stdout
+                will be used.  NOTE: Sending compressed output to stdout may
+                produce undesirable results.
+
+HISTORY
+-------
+12/22/08  - Initial Release
+
+TODO
+----
+- Try dynamic code generation.
+
+AUTHOR
+------
+Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
+http://michael.dipperstein.com
