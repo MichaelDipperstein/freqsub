@@ -188,8 +188,8 @@ int FreqEncodeFile(char *inFile, char *outFile)
         c++;
     }
 
-    /* signal end of code table with duplicate symbol */
-    if (c > 0)
+    /* signal end of short code table with duplicate symbol */
+    if ((c > 0) && (c < 256))
     {
         fputc(freqs[c - 1].symbol, fpOut);
     }
@@ -222,7 +222,7 @@ int FreqDecodeFile(char *inFile, char *outFile)
     FILE *fpIn;                         /* encoded input */
     FILE *fpOut;                        /* decoded output */
     unsigned char codes[UCHAR_MAX + 1]; /* frequency based codes */
-    unsigned char prev, symbol;
+    unsigned char prev, codeWord;
     int c;
 
     /* open input and output files */
@@ -257,7 +257,7 @@ int FreqDecodeFile(char *inFile, char *outFile)
         prev = 0;
     }
 
-    symbol = 1;
+    codeWord = 1;
 
     while ((c = fgetc(fpIn)) != EOF)
     {
@@ -266,9 +266,17 @@ int FreqDecodeFile(char *inFile, char *outFile)
             break;
         }
 
-        codes[symbol] = c;
+        codes[codeWord] = c;
         prev = (unsigned char)c;
-        symbol++;
+
+        if (255 != codeWord)
+        {
+            codeWord++;
+        }
+        else
+        {
+            break;
+        }
     }
 
     /* write decoded file */
