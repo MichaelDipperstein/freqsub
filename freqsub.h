@@ -13,24 +13,13 @@
 *             entire symbol set (even the unused symbols).
 *
 *   Author  : Michael Dipperstein
-*   Date    : Devember 21, 2008
-*
-****************************************************************************
-*   UPDATES
-*
-*   $Id: freqsub.h,v 1.2 2008/12/23 07:15:30 michael Exp $
-*   $Log: freqsub.h,v $
-*   Revision 1.2  2008/12/23 07:15:30  michael
-*   Add support for sparse file headers.
-*
-*   Revision 1.1.1.1  2008/12/22 15:17:38  michael
-*   Initial Release
+*   Date    : December 21, 2008
 *
 ****************************************************************************
 *
 * freqsub: An ANSI C Frequency Substitution Encoding/Decoding Library
 *          Example
-* Copyright (C) 2008 by
+* Copyright (C) 2008, 2014 by
 *   Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the Frequency Substitution library.
@@ -61,7 +50,4 @@
 int FreqEncodeFile(char *inFile, char *outFile);
 int FreqDecodeFile(char *inFile, char *outFile);
 
-/* encode/decode for files not using full symbols set */
-int FreqEncodeSparseFile(char *inFile, char *outFile);
-int FreqDecodeSparseFile(char *inFile, char *outFile);
 #endif  /* ndef _FREQSUB_H_ */

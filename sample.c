@@ -8,20 +8,9 @@
 *   Date    : December 21, 2008
 *
 ****************************************************************************
-*   UPDATES
-*
-*   $Id: sample.c,v 1.2 2008/12/23 07:15:14 michael Exp $
-*   $Log: sample.c,v $
-*   Revision 1.2  2008/12/23 07:15:14  michael
-*   Add support for sparse file headers.
-*
-*   Revision 1.1.1.1  2008/12/22 15:17:38  michael
-*   Initial Release
-*
-****************************************************************************
 *
 * sample: An ANSI C Frequency Substitution Encoding/Decoding Library Example
-* Copyright (C) 2008 by
+* Copyright (C) 2008, 2014 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the Frequency Substitution library.
@@ -53,24 +42,22 @@
 /***************************************************************************
 *                            TYPE DEFINITIONS
 ***************************************************************************/
+
 typedef enum
 {
-    ENCODE,
-    ENCODE_SPARSE,
-    DECODE,
-    DECODE_SPARSE
-} MODES;
+    MODE_UNSPECIFIED,
+    MODE_ENCODE,
+    MODE_DECODE
+} modes_t;
+
 
 /***************************************************************************
 *                                CONSTANTS
 ***************************************************************************/
-#define FALSE   0
-#define TRUE    1
 
 /***************************************************************************
 *                               PROTOTYPES
 ***************************************************************************/
-char *RemovePath(char *fullPath);
 void ShowUsage(FILE *stream, char *progName);
 
 /***************************************************************************
@@ -94,12 +81,12 @@ int main (int argc, char *argv[])
     int status;
     option_t *optList, *thisOpt;
     char *inFile, *outFile;
-    MODES mode;
+    modes_t mode;
 
     /* initialize variables */
     inFile = NULL;
     outFile = NULL;
-    mode = ENCODE;
+    mode = MODE_UNSPECIFIED;
 
     /* parse command line */
     optList = GetOptList(argc, argv, "desi:o:h?");
@@ -110,36 +97,11 @@ int main (int argc, char *argv[])
         switch(thisOpt->option)
         {
             case 'd':       /* decode mode */
-                if ((ENCODE == mode) || (DECODE == mode))
-                {
-                    mode = DECODE;
-                }
-                else
-                {
-                    mode = DECODE_SPARSE;
-                }
+                mode = MODE_DECODE;
                 break;
 
             case 'e':       /* encode mode */
-                if ((ENCODE == mode) || (DECODE == mode))
-                {
-                    mode = ENCODE;
-                }
-                else
-                {
-                    mode = ENCODE_SPARSE;
-                }
-                break;
-
-            case 's':       /* sparse mode */
-                if (ENCODE == mode)
-                {
-                    mode = ENCODE_SPARSE;
-                }
-                else if (DECODE == mode)
-                {
-                    mode = DECODE_SPARSE;
-                }
+                mode = MODE_ENCODE;
                 break;
 
             case 'i':       /* input file name */
@@ -206,7 +168,7 @@ int main (int argc, char *argv[])
 
             case 'h':
             case '?':
-                ShowUsage(stdout, RemovePath(argv[0]));
+                ShowUsage(stdout, FindFileName(argv[0]));
                 FreeOptList(optList);
                 return(EXIT_SUCCESS);
         }
@@ -220,32 +182,25 @@ int main (int argc, char *argv[])
     if (inFile == NULL)
     {
         fprintf(stderr, "Input file must be provided\n");
-        ShowUsage(stderr, RemovePath(argv[0]));
+        ShowUsage(stderr, FindFileName(argv[0]));
         exit (EXIT_FAILURE);
     }
 
     /* execute selected function */
     switch (mode)
     {
-        case ENCODE:
+        case MODE_ENCODE:
             status = FreqEncodeFile(inFile, outFile);
             break;
 
-        case DECODE:
+        case MODE_DECODE:
             status = FreqDecodeFile(inFile, outFile);
             break;
 
-        case ENCODE_SPARSE:
-            status = FreqEncodeSparseFile(inFile, outFile);
-            break;
-
-        case DECODE_SPARSE:
-            status = FreqDecodeSparseFile(inFile, outFile);
-            break;
-
         default:        /* error case */
-            status = 0;
-            break;
+            fprintf(stderr, "Error: must specify encode or decode.\n");
+            ShowUsage(stderr, FindFileName(argv[0]));
+            exit (EXIT_FAILURE);
     }
 
     /* clean up*/
@@ -266,39 +221,6 @@ int main (int argc, char *argv[])
 }
 
 /****************************************************************************
-*   Function   : RemovePath
-*   Description: This is function accepts a pointer to the name of a file
-*                along with path information and returns a pointer to the
-*                character that is not part of the path.
-*   Parameters : fullPath - pointer to an array of characters containing
-*                           a file name and possible path modifiers.
-*   Effects    : None
-*   Returned   : Returns a pointer to the first character after any path
-*                information.
-****************************************************************************/
-char *RemovePath(char *fullPath)
-{
-    int i;
-    char *start, *tmp;                          /* start of file name */
-    const char delim[3] = {'\\', '/', ':'};     /* path deliminators */
-
-    start = fullPath;
-
-    /* find the first character after all file path delimiters */
-    for (i = 0; i < 3; i++)
-    {
-        tmp = strrchr(start, delim[i]);
-
-        if (tmp != NULL)
-        {
-            start = tmp + 1;
-        }
-    }
-
-    return start;
-}
-
-/****************************************************************************
 *   Function   : ShowUsage
 *   Description: This function sends instructions for using this program to
 *                stdout.
@@ -314,7 +236,6 @@ void ShowUsage(FILE *stream, char *progName)
     fprintf(stream, "Options:\n");
     fprintf(stream, "  -d : Decode input file to output file.\n");
     fprintf(stream, "  -e : Encode input file to output file.\n");
-    fprintf(stream, "  -s : Use sparse data file header.\n");
     fprintf(stream, "  -i <filename> : Name of input file.\n");
     fprintf(stream, "  -o <filename> : Name of output file.\n");
     fprintf(stream, "  -h | ?  : Print out command line options.\n\n");

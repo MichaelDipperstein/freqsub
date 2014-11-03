@@ -13,29 +13,13 @@
 *             entire symbol set (even the unused symbols).
 *
 *   Author  : Michael Dipperstein
-*   Date    : Devember 21, 2008
-*
-****************************************************************************
-*   UPDATES
-*
-*   $Id: freqsub.c,v 1.3 2008/12/25 05:35:55 michael Exp $
-*   $Log: freqsub.c,v $
-*   Revision 1.3  2008/12/25 05:35:55  michael
-*   Use tables size instead of end of table marker in sparse headers.
-*   Correct typos.
-*
-*   Revision 1.2  2008/12/23 07:15:49  michael
-*   Fix boundary errors.
-*   Add support for sparse file headers.
-*
-*   Revision 1.1.1.1  2008/12/22 15:17:38  michael
-*   Initial Release
+*   Date    : December 21, 2008
 *
 ****************************************************************************
 *
 * freqsub: An ANSI C Frequency Substitution Encoding/Decoding Library
 *          Example
-* Copyright (C) 2008 by
+* Copyright (C) 2008, 2014 by
 *   Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the Frequency Substitution library.
@@ -196,9 +180,18 @@ int FreqEncodeFile(char *inFile, char *outFile)
     }
 
     /* output code table */
-    for (c = 0; c <= UCHAR_MAX; c++)
+    c = 0;
+
+    while (freqs[c].freq > 0)
     {
-        fputc(codes[c], fpOut);
+        fputc(freqs[c].symbol, fpOut);
+        c++;
+    }
+
+    /* signal end of code table with duplicate symbol */
+    if (c > 0)
+    {
+        fputc(freqs[c - 1].symbol, fpOut);
     }
 
     /* output encoded file */
@@ -229,7 +222,8 @@ int FreqDecodeFile(char *inFile, char *outFile)
     FILE *fpIn;                         /* encoded input */
     FILE *fpOut;                        /* decoded output */
     unsigned char codes[UCHAR_MAX + 1]; /* frequency based codes */
-    int i, c;
+    unsigned char prev, symbol;
+    int c;
 
     /* open input and output files */
     if ((fpIn = fopen(inFile, "rb")) == NULL)
@@ -253,217 +247,34 @@ int FreqDecodeFile(char *inFile, char *outFile)
     }
 
     /* read in code */
-    for (i = 0; i <= UCHAR_MAX; i++)
+    if ((c = fgetc(fpIn)) != EOF)
     {
-        if ((c = fgetc(fpIn)) != EOF)
+        codes[0] = c;
+        prev = (unsigned char)c;
+    }
+    else
+    {
+        prev = 0;
+    }
+
+    symbol = 1;
+
+    while ((c = fgetc(fpIn)) != EOF)
+    {
+        if (((unsigned char)c) == prev)
         {
-            codes[c] = i;
+            break;
         }
-        else
-        {
-            fprintf(stderr, "%s not encoded file.\n", inFile);
-            fclose(fpIn);
-            fclose(fpOut);
-            return EXIT_FAILURE;
-        }
+
+        codes[symbol] = c;
+        prev = (unsigned char)c;
+        symbol++;
     }
 
     /* write decoded file */
     while ((c = fgetc(fpIn)) != EOF)
     {
         fputc(codes[c], fpOut);
-    }
-
-    /* clean up */
-    fclose(fpIn);
-    fclose(fpOut);
-    return EXIT_SUCCESS;
-}
-
-/***************************************************************************
-*   Function   : FreqEncodeSparseFile
-*   Description: This routine reads an input file and counts character
-*                frequencies.  The file is then read again and an output
-*                file is created where each input character is encoded with
-*                a value associated with its frequency.  The more frequent
-*                the symbol, the lower the value.
-*   Parameters : inFile - Name of file to encode
-*                outFile - Name of file to write encoded output to
-*   Effects    : File is encoded using frequency substitution.
-*   Returned   : EXIT_SUCCESS for success, otherwise EXIT_FAILURE.
-***************************************************************************/
-int FreqEncodeSparseFile(char *inFile, char *outFile)
-{
-    FILE *fpIn;                         /* uncoded input */
-    FILE *fpOut;                        /* encoded output */
-    symbol_freq_t freqs[UCHAR_MAX + 1]; /* frequency counts */
-    unsigned char codes[UCHAR_MAX + 1]; /* frequency based codes */
-    unsigned char used[UCHAR_MAX + 1];  /* non-zero if indexed symbol is used */
-    int c, prev, tableLength;
-
-    /* open input and output files */
-    if ((fpIn = fopen(inFile, "rb")) == NULL)
-    {
-        perror(inFile);
-        return EXIT_FAILURE;
-    }
-
-    if (outFile == NULL)
-    {
-        fpOut = stdout;
-    }
-    else
-    {
-        if ((fpOut = fopen(outFile, "wb")) == NULL)
-        {
-            fclose(fpIn);
-            perror(outFile);
-            return EXIT_FAILURE;
-        }
-    }
-
-    /* initialize frequency counts */
-    for (c = 0; c <= UCHAR_MAX; c++)
-    {
-        freqs[c].symbol = c;
-        freqs[c].freq = 0;
-    }
-
-    /* count frequencies */
-    while((c = fgetc(fpIn)) != EOF)
-    {
-        freqs[c].freq++;
-
-        if (0 == freqs[c].freq)
-        {
-            freqs[c].freq = ULONG_MAX;
-            fprintf(stderr,
-                "Warning: Frequency of %02X too large to count\n", c);
-        }
-    }
-
-    /* sort freqs by frequency */
-    qsort(freqs, UCHAR_MAX + 1, sizeof(symbol_freq_t), FreqCompare);
-
-    /* determine frequency based codes */
-    tableLength = 0;
-
-    for (c = 0; c <= UCHAR_MAX; c++)
-    {
-        codes[freqs[c].symbol] = (unsigned char)c;
-        
-        if (freqs[c].freq != 0)
-        {
-            used[freqs[c].symbol] = 1;
-            tableLength++;
-        }
-        else
-        {
-            used[freqs[c].symbol] = 0;
-        }
-    }
-
-    /* output size of code table */
-    fputc((tableLength - 1), fpOut);
-
-    /* output code table */
-    prev = 0;
-    for (c = 0; c <= UCHAR_MAX; c++)
-    {
-        if (used[c] != 0)
-        {
-            /* symbol is used.  write offset from last and code */
-            fputc(c - prev, fpOut);
-            fputc(codes[c], fpOut);
-            prev = c;
-        }
-    }
-
-    /* output encoded file */
-    rewind(fpIn);
-
-    while((c = fgetc(fpIn)) != EOF)
-    {
-        fputc(codes[c], fpOut);
-    }
-
-    /* clean up */
-    fclose(fpIn);
-    fclose(fpOut);
-    return EXIT_SUCCESS;
-}
-
-/***************************************************************************
-*   Function   : FreqDecodeSparseFile
-*   Description: This routine reads a frequency substitution encode file
-*                writes a decoded version to the specified output file.
-*   Parameters : inFile - Name of file to decode
-*                outFile - Name of file to write decoded output to
-*   Effects    : Frequency substitution encoded file is decoded.
-*   Returned   : EXIT_SUCCESS for success, otherwise EXIT_FAILURE.
-***************************************************************************/
-int FreqDecodeSparseFile(char *inFile, char *outFile)
-{
-    FILE *fpIn;                         /* encoded input */
-    FILE *fpOut;                        /* decoded output */
-    unsigned char codes[UCHAR_MAX + 1]; /* frequency based codes */
-    int symbol, code, prev, tableLength;
-
-    /* open input and output files */
-    if ((fpIn = fopen(inFile, "rb")) == NULL)
-    {
-        perror(inFile);
-        return EXIT_FAILURE;
-    }
-
-    if (outFile == NULL)
-    {
-        fpOut = stdout;
-    }
-    else
-    {
-        if ((fpOut = fopen(outFile, "wb")) == NULL)
-        {
-            fclose(fpIn);
-            perror(outFile);
-            return EXIT_FAILURE;
-        }
-    }
-
-    /* read in code */
-    tableLength = fgetc(fpIn) + 1;      /* NOTE: loop handles EOF */
-    prev = 0;
-
-    while (tableLength != 0)
-    {
-        /* read symbol offset */
-        if (EOF == (symbol = fgetc(fpIn)))
-        {
-            fprintf(stderr, "%s not encoded file.\n", inFile);
-            fclose(fpIn);
-            fclose(fpOut);
-            return EXIT_FAILURE;
-        }
-
-        /* read symbol code */
-        if (EOF == (code = fgetc(fpIn)))
-        {
-            fprintf(stderr, "%s not encoded file.\n", inFile);
-            fclose(fpIn);
-            fclose(fpOut);
-            return EXIT_FAILURE;
-        }
-
-        symbol += prev;
-        codes[code] = symbol;
-        prev = symbol;
-        tableLength--;
-    }
-
-    /* write decoded file */
-    while ((code = fgetc(fpIn)) != EOF)
-    {
-        fputc(codes[code], fpOut);
     }
 
     /* clean up */
