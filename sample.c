@@ -79,8 +79,10 @@ void ShowUsage(FILE *stream, char *progName);
 int main (int argc, char *argv[])
 {
     int status;
-    option_t *optList, *thisOpt;
-    char *inFile, *outFile;
+    option_t *optList;
+    option_t *thisOpt;
+    FILE *inFile;
+    FILE *outFile;
     modes_t mode;
 
     /* initialize variables */
@@ -108,62 +110,56 @@ int main (int argc, char *argv[])
                 if (inFile != NULL)
                 {
                     fprintf(stderr, "Multiple input files not allowed.\n");
-                    free(inFile);
+                    fclose(inFile);
 
                     if (outFile != NULL)
                     {
-                        free(outFile);
+                        fclose(outFile);
                     }
 
                     FreeOptList(optList);
                     exit(EXIT_FAILURE);
                 }
-                else if ((inFile =
-                    (char *)malloc(strlen(thisOpt->argument) + 1)) == NULL)
+                else if ((inFile = fopen(thisOpt->argument, "rb")) == NULL)
                 {
-                    perror("Memory allocation");
+                    perror("Opening Input File");
 
                     if (outFile != NULL)
                     {
-                        free(outFile);
+                        fclose(outFile);
                     }
 
                     FreeOptList(optList);
                     exit(EXIT_FAILURE);
                 }
-
-                strcpy(inFile, thisOpt->argument);
                 break;
 
             case 'o':       /* output file name */
                 if (outFile != NULL)
                 {
                     fprintf(stderr, "Multiple output files not allowed.\n");
-                    free(outFile);
+                    fclose(outFile);
 
                     if (inFile != NULL)
                     {
-                        free(inFile);
+                        fclose(inFile);
                     }
 
                     FreeOptList(optList);
                     exit(EXIT_FAILURE);
                 }
-                else if ((outFile =
-                    (char *)malloc(strlen(thisOpt->argument) + 1)) == NULL)
+                else if ((outFile = fopen(thisOpt->argument, "wb")) == NULL)
                 {
-                    perror("Memory allocation");
+                    perror("Opening Output File");
 
                     if (inFile != NULL)
                     {
-                        free(inFile);
+                        fclose(inFile);
                     }
 
                     FreeOptList(optList);
                     exit(EXIT_FAILURE);
                 }
-
-                strcpy(outFile, thisOpt->argument);
                 break;
 
             case 'h':
@@ -179,9 +175,9 @@ int main (int argc, char *argv[])
     }
 
     /* validate command line */
-    if (inFile == NULL)
+    if ((inFile == NULL) || (outFile == NULL))
     {
-        fprintf(stderr, "Input file must be provided\n");
+        fprintf(stderr, "Input and output files must be provided\n");
         ShowUsage(stderr, FindFileName(argv[0]));
         exit (EXIT_FAILURE);
     }
@@ -203,19 +199,17 @@ int main (int argc, char *argv[])
             exit (EXIT_FAILURE);
     }
 
-    /* clean up*/
-    free(inFile);
-    if (outFile != NULL)
-    {
-        free(outFile);
-    }
+    /* close files.  they are always left open */
+    fclose(inFile);
+    fclose(outFile);
 
-    if (status)
+    if (0 == status)
     {
         return (EXIT_SUCCESS);
     }
     else
     {
+        perror("Error");
         return (EXIT_FAILURE);
     }
 }

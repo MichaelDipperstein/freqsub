@@ -47,7 +47,7 @@
 ***************************************************************************/
 
 /* encode/decode for files using most symbols */
-int FreqEncodeFile(char *inFile, char *outFile);
-int FreqDecodeFile(char *inFile, char *outFile);
+int FreqEncodeFile(FILE *inFile, FILE *outFile);
+int FreqDecodeFile(FILE *inFile, FILE *outFile);
 
 #endif  /* ndef _FREQSUB_H_ */
