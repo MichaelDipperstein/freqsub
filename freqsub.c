@@ -88,7 +88,7 @@ typedef struct symbol_freq_t
 *                  0 if freq2 == freq1
 *                > 0 if freq2 > freq1
 ***************************************************************************/
-int FreqCompare(const void *freq1, const void *freq2)
+static int FreqCompare(const void *freq1, const void *freq2)
 {
     unsigned int f1, f2;
 
@@ -229,8 +229,8 @@ int FreqEncodeFile(FILE *inFile, FILE *outFile)
 int FreqDecodeFile(FILE *inFile, FILE *outFile)
 {
     unsigned char codes[UCHAR_MAX + 1]; /* frequency based codes */
-    unsigned char prev;
     unsigned char codeWord;
+    unsigned char prev;
     int c;
 
     /* validate input and output files */

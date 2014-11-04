@@ -37,7 +37,6 @@ Usage: sample <options>
 options:
   -d : Decode input file to output file.
   -e : Encode input file to output file.
-  -s : Use sparse data file header.
   -i <filename> : Name of input file.
   -o <filename> : Name of output file.
   -h|?  : Print out command line options.
@@ -51,10 +50,6 @@ options:
         substitution encoding algorithm.  Results are written to the specified
         output file (see -o).
 
--s      Use sparse data file header.  The code stored at the top of the encoded
-        file is/will be optimized for unencode data streams that use less than
-        half of the available symbols (eg. English text).
-
 -i <filename>   The name of the input file.  There is no valid usage of this
                 program without a specified input file.
 
@@ -62,9 +57,44 @@ options:
                 will be used.  NOTE: Sending compressed output to stdout may
                 produce undesirable results.
 
+LIBRARY API
+-----------
+Encoding Data:
+int FreqEncodeFile(FILE *inFile, FILE *outFile);
+inFile
+    The file stream to be encoded.  It must be rewindable and opened.
+    NULL pointers will return an error.
+outFile
+    The file stream receiving the encoded results.  It must be opened.  NULL
+    pointers will return an error.
+Return Value
+    Zero for success, -1 for failure.  Error type is contained in errno.  Files
+    will remain open.
+
+Decoding Data:
+int FreqDecodeFile(FILE *inFile, FILE *outFile);
+inFile
+    The file stream to be decoded.  It must be opened.  NULL pointers will
+    return an error.
+outFile
+    The file stream receiving the decoded results.  It must be opened.  NULL
+    pointers will return an error.
+Return Value
+    Zero for success, -1 for failure.  Error type is contained in errno.  Files
+    will remain open.
+
 HISTORY
 -------
 12/22/08  - Initial Release
+11/03/14  - Changed the API so that encode and decode routines accept opened
+            file streams instead of file names.
+          - New sparse header that's never bigger than full header, so only
+            one kind of header is provided.
+          - Changed return value to 0 for success and -1 for failure with
+            reason in errno.
+          - Upgrade to latest oplist library.
+          - Tighter adherence to Michael Barr's "Top 10 Bug-Killing Coding
+            Standard Rules" (http://www.barrgroup.com/webinars/10rules).
 
 TODO
 ----
