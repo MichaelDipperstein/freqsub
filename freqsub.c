@@ -218,7 +218,7 @@ int FreqEncodeFile(FILE *inFile, FILE *outFile)
 /***************************************************************************
 *   Function   : FreqDecodeFile
 *   Description: This routine reads a frequency substitution encode file
-*                writes a decoded version to the specified output file.
+*                and writes a decoded version to the specified output file.
 *   Parameters : inFile - Pointer to the file to decode
 *                outFile - Pointer to the file to write decoded output to
 *   Effects    : Frequency substitution encoded file is decoded.
