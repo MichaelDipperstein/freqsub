@@ -1,11 +1,6 @@
 ############################################################################
 # Makefile for frequency substitution encode/decode programs
 #
-#   $Id: Makefile,v 1.1.1.1 2008/12/22 15:17:38 michael Exp $
-#   $Log: Makefile,v $
-#   Revision 1.1.1.1  2008/12/22 15:17:38  michael
-#   Initial Release
-#
 ############################################################################
 
 CC = gcc
@@ -14,7 +9,7 @@ CFLAGS = -O3 -Wall -Wextra -ansi -pedantic -c
 LDFLAGS = -O3 -o
 
 # libraries
-LIBS = -L. -lfreqsub -loptlist
+LIBS = -L. -Loptlist -lfreqsub -loptlist
 
 # Treat NT and non-NT windows the same
 ifeq ($(OS),Windows_NT)
@@ -31,10 +26,10 @@ endif
 
 all:		sample$(EXE)
 
-sample$(EXE):	sample.o libfreqsub.a liboptlist.a
+sample$(EXE):	sample.o libfreqsub.a optlist/liboptlist.a
 		$(LD) $^ $(LIBS) $(LDFLAGS) $@
 
-sample.o:	sample.c freqsub.h optlist.h
+sample.o:	sample.c freqsub.h optlist/optlist.h
 		$(CC) $(CFLAGS) $<
 
 libfreqsub.a:	freqsub.o
@@ -44,14 +39,11 @@ libfreqsub.a:	freqsub.o
 freqsub.o:	freqsub.c freqsub.h
 		$(CC) $(CFLAGS) $<
 
-liboptlist.a:	optlist.o
-		ar crv liboptlist.a optlist.o
-		ranlib liboptlist.a
-
-optlist.o:	optlist.c optlist.h
-		$(CC) $(CFLAGS) $<
+optlist/liboptlist.a:
+		cd optlist && $(MAKE) liboptlist.a
 
 clean:
 		$(DEL) *.o
 		$(DEL) *.a
 		$(DEL) sample$(EXE)
+		cd optlist && $(MAKE) clean

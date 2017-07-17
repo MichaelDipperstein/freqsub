@@ -10,7 +10,7 @@
 ****************************************************************************
 *
 * sample: An ANSI C Frequency Substitution Encoding/Decoding Library Example
-* Copyright (C) 2008, 2014 by
+* Copyright (C) 2008, 2014, 2017 by
 * Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
 *
 * This file is part of the Frequency Substitution library.
@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "freqsub.h"
-#include "optlist.h"
+#include "optlist/optlist.h"
 
 /***************************************************************************
 *                            TYPE DEFINITIONS
