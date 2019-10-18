@@ -20,7 +20,7 @@
 * freqsub: An ANSI C Frequency Substitution Encoding/Decoding Library
 *          Example
 * Copyright (C) 2008, 2014 by
-*   Michael Dipperstein (mdipper@alumni.engr.ucsb.edu)
+*   Michael Dipperstein (mdipperstein@gmail.com)
 *
 * This file is part of the Frequency Substitution library.
 *
